@@ -63,9 +63,9 @@ class VendaController extends Controller
     {
         $parcelas = 1;
 
-        if($parcelas < $request->parcelas) $parcelas = $request->parcelas;
+        if($parcelas < $request->parcelas) $n_parcelas = $request->parcelas;
         
-        $valor_parcelas = $request->total / $parcelas;
+        $valor_parcelas = $request->total / $n_parcelas;
 
         $parcelas = [];
         
@@ -73,9 +73,10 @@ class VendaController extends Controller
 
         $vendedor = $request->session()->get('vendedor');
         $nome_vendedor = $vendedor->nome;
-
         $id_venda = $request->id_venda;
-        for ($i = 1; $i <= $parcelas; $i++) {
+        $venda = Venda::findOrFail($id_venda);
+        //dd($venda);
+        for ($i = 1; $i <= $n_parcelas; $i++) {
             $data_parcela = now()->addMonths($i);
             $data_formatada = $data_parcela->format('Y-m-d');
 
@@ -88,9 +89,10 @@ class VendaController extends Controller
             $parcelas[] =[
                 'numero' => $i,
                 'data' =>$data_formatada,
+                'id_venda'=>$id_venda,
                 'valor' => $valor_parcelas
             ];
-
+            
         }
 
         return view('venda.pagamento.index', compact('parcelas', 'nome_cliente', 'vendedor', 'id_venda'));
@@ -110,17 +112,17 @@ class VendaController extends Controller
         $venda = Venda::findOrFail($id_venda);
         $vendedor = Vendedor::findOrFail($venda->vendedor_id);
         $cliente = Cliente::findOrFail($venda->cliente_id);
-
+        $nome_cliente = $cliente->nome;
 
    
-        $parcelas = $venda->parcelas;
+        $parcelas = Parcela::where('venda_id', $id_venda)->get();
 
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true);
 
         $dompdf = new Dompdf($options);
-        $dompdf->loadHtml(view('venda.pagamento.pdf.index', compact('venda', 'vendedor', 'cliente', 'parcelas')));
+        $dompdf->loadHtml( view('venda.pagamento.index',compact('id_venda','vendedor','nome_cliente','parcelas')));
 
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

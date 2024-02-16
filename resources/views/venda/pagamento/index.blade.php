@@ -18,7 +18,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($datas_parcelas as $parcela)
+            @foreach($parcelas as $parcela)
             <tr>
                 <td>{{ $parcela['numero'] }}</td>
                 <td>{{ $parcela['data'] }}</td>
